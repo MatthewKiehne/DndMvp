@@ -252,6 +252,22 @@ namespace Mirror
             return result;
         }
 
+        public static Dictionary<Key,Value> ReadDictionary<Key,Value>(this NetworkReader reader)
+        {
+            int count = reader.ReadInt();
+            if(count == -1)
+            {
+                return null;
+            }
+
+            Dictionary<Key,Value> result = new Dictionary<Key, Value>();
+            for(int i = 0; i < count; i++)
+            {
+                result.Add(reader.Read<Key>(), reader.Read<Value>());
+            }
+            return result;
+        }
+
         // while SyncSet<T> is recommended for NetworkBehaviours,
         // structs may have .Set<T> members which weaver needs to be able to
         // fully serialize for NetworkMessages etc.

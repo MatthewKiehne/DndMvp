@@ -284,7 +284,7 @@ namespace Mirror
                 writer.Write(list[i]);
         }
 
-        public static void WriteDictionary<Value>(this NetworkWriter writer, Dictionary<string,Value> dict)
+        public static void WriteDictionary<Key, Value>(this NetworkWriter writer, Dictionary<Key,Value> dict)
         {
             if(dict == null)
             {
@@ -293,8 +293,8 @@ namespace Mirror
             }
 
             writer.WriteInt(dict.Count);
-            foreach (KeyValuePair<string,Value> item in dict) {
-                writer.Write<string>(item.Key);
+            foreach (KeyValuePair<Key,Value> item in dict) {
+                writer.Write<Key>(item.Key);
                 writer.Write<Value>(item.Value);
             }
         }

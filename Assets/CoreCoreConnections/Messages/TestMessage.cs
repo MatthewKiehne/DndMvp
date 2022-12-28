@@ -8,5 +8,5 @@ public struct TestMessage : NetworkMessage
     public DateTime time;
     public Guid id;
     public List<string> strings;
-    // public Dictionary<string, string> pairs;
+    public Dictionary<string, string> pairs;
 }

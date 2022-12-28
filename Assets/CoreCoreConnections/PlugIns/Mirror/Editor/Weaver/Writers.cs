@@ -114,6 +114,11 @@ namespace Mirror.Weaver
 
                 return GenerateCollectionWriter(variableReference, elementType, nameof(NetworkWriterExtensions.WriteList), ref WeavingFailed);
             }
+            if(variableReference.Is(typeof(Dictionary<,>))){
+                GenericInstanceType genericInstance = (GenericInstanceType)variableReference;
+
+                return GenerateCollectionWriter(variableReference, genericInstance.GenericArguments, nameof(NetworkWriterExtensions.WriteDictionary), ref WeavingFailed);
+            }
 
             if (variableReference.IsDerivedFrom<NetworkBehaviour>())
             {
@@ -269,14 +274,31 @@ namespace Mirror.Weaver
 
         MethodDefinition GenerateCollectionWriter(TypeReference variable, TypeReference elementType, string writerFunction, ref bool WeavingFailed)
         {
+            return GenerateCollectionWriter(variable, new List<TypeReference>(){elementType}, writerFunction, ref WeavingFailed);
+        }
+
+        MethodDefinition GenerateCollectionWriter(TypeReference variable, ICollection<TypeReference> elementTypes, string writerFunction, ref bool WeavingFailed)
+        {
 
             MethodDefinition writerFunc = GenerateWriterFunc(variable);
 
-            MethodReference elementWriteFunc = GetWriteFunc(elementType, ref WeavingFailed);
+            bool failed = false;
+            List<MethodReference> elementWriteFuncs = new List<MethodReference>();
+            foreach( var element in elementTypes)
+            {
+                MethodReference elementWriteFunc = GetWriteFunc(element, ref WeavingFailed);
+                if (elementWriteFunc == null)
+                {
+                    failed = true;
+                    break;
+                }
+                elementWriteFuncs.Add(elementWriteFunc);
+            }
+            
             MethodReference intWriterFunc = GetWriteFunc(weaverTypes.Import<int>(), ref WeavingFailed);
 
             // need this null check till later PR when GetWriteFunc throws exception instead
-            if (elementWriteFunc == null)
+            if (failed)
             {
                 Log.Error($"Cannot generate writer for {variable}. Use a supported type or provide a custom writer", variable);
                 WeavingFailed = true;
@@ -288,7 +310,10 @@ namespace Mirror.Weaver
             MethodReference collectionWriter = Resolvers.ResolveMethod(readerExtensions, assembly, Log, writerFunction, ref WeavingFailed);
 
             GenericInstanceMethod methodRef = new GenericInstanceMethod(collectionWriter);
-            methodRef.GenericArguments.Add(elementType);
+            foreach(TypeReference element in elementTypes)
+            {
+                methodRef.GenericArguments.Add(element);
+            }
 
             // generates
             // reader.WriteArray<T>(array);

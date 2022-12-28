@@ -113,6 +113,10 @@ namespace Mirror.Weaver
 
                 return GenerateReadCollection(variableReference, elementType, nameof(NetworkReaderExtensions.ReadList), ref WeavingFailed);
             }
+            else if(variableDefinition.Is(typeof(Dictionary<,>))){
+                GenericInstanceType genericInstance = (GenericInstanceType)variableReference;
+                return GenerateReadCollection(variableReference, genericInstance.GenericArguments, nameof(NetworkReaderExtensions.ReadDictionary), ref WeavingFailed);
+            }
             else if (variableReference.IsDerivedFrom<NetworkBehaviour>())
             {
                 return GetNetworkBehaviourReader(variableReference);
@@ -229,16 +233,42 @@ namespace Mirror.Weaver
 
         MethodDefinition GenerateReadCollection(TypeReference variable, TypeReference elementType, string readerFunction, ref bool WeavingFailed)
         {
+            return GenerateReadCollection(variable, new List<TypeReference>() {elementType}, readerFunction, ref WeavingFailed);
+        }
+
+        MethodDefinition GenerateReadCollection(TypeReference variable, ICollection<TypeReference> elementTypes, string readerFunction, ref bool WeavingFailed)
+        {
             MethodDefinition readerFunc = GenerateReaderFunction(variable);
             // generate readers for the element
-            GetReadFunc(elementType, ref WeavingFailed);
+            bool failed = false;
+            List<MethodReference> elementReadFuncs = new List<MethodReference>();
+            foreach( var element in elementTypes)
+            {
+                MethodReference elementReadFunc = GetReadFunc(element, ref WeavingFailed);
+                if(elementReadFunc == null)
+                {
+                    failed = true;
+                    break;
+                }
+                elementReadFuncs.Add(elementReadFunc);
+            }
+
+            if (failed)
+            {
+                Log.Error($"Cannot generate writer for {variable}. Use a supported type or provide a custom writer", variable);
+                WeavingFailed = true;
+                return readerFunc;
+            }
 
             ModuleDefinition module = assembly.MainModule;
             TypeReference readerExtensions = module.ImportReference(typeof(NetworkReaderExtensions));
             MethodReference listReader = Resolvers.ResolveMethod(readerExtensions, assembly, Log, readerFunction, ref WeavingFailed);
 
             GenericInstanceMethod methodRef = new GenericInstanceMethod(listReader);
-            methodRef.GenericArguments.Add(elementType);
+            foreach(TypeReference element in elementTypes)
+            {
+                methodRef.GenericArguments.Add(element);
+            }
 
             // generates
             // return reader.ReadList<T>();

@@ -27,10 +27,10 @@ public class MyNetManager : NetworkManager
         {
             Debug.Log(i);
         }
-        // foreach(var i in message.pairs)
-        // {
-        //     Debug.Log(i.Value);
-        // }
+        foreach(var i in message.pairs)
+        {
+            Debug.Log(i.Value);
+        }
     }
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)

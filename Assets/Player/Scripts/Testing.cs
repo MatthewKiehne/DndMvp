@@ -37,9 +37,9 @@ public class Testing : NetworkBehaviour
                     "a",
                     "list"
                 },
-                // pairs = new Dictionary<string, string>(){
-                //     {"aKey", "aValue"}
-                // }
+                pairs = new Dictionary<string, string>(){
+                    {"aKey", "aValue"}
+                }
             };
             NetworkClient.Send(message);
         }
