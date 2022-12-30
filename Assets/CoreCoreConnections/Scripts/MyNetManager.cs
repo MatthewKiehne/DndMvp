@@ -1,9 +1,9 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Mirror;
-using UnityEditor;
 using UnityEngine;
+using Entities.Search;
+using Entities.Features;
 
 public class MyNetManager : NetworkManager
 {
@@ -13,12 +13,41 @@ public class MyNetManager : NetworkManager
 
     public static readonly string PlayerInitObject = "thisIsATest";
 
+    private Entities.Entity TestEntity;
+
     public override void OnStartServer()
     {
         SpriteLookup.Add(PlayerInitObject, sprite);
         base.OnStartServer();
 
         NetworkServer.RegisterHandler<TestMessage>(ConsumeMessage);
+
+        TestEntity = new Entities.Entity();
+
+        string oneString = "one";
+
+        Condition one = new Condition(oneString, 1);
+        Feature feature = new Feature("featureName");
+        feature.Conditions.Add(one);
+        feature.Conditions.Add(one);
+        TestEntity.Features.Add(feature);
+
+        SearchEntity se = new SearchEntity();
+
+        List<string> searchTargets  = new List<string>(){
+            SearchEntity.FeatureSearchTerm
+        };
+        List<string> searchTerms = new List<string>(){
+            oneString
+        };
+
+        EntitySearchQuery query = new EntitySearchQuery(searchTargets, searchTerms);
+
+        EntitySearchResult result = se.Search(TestEntity, query);
+        
+        List<Condition> c = result[oneString];
+        int sum = c.Sum( x => x.Value);
+        Debug.Log("Sum: " + sum);
     }
 
     public void ConsumeMessage(NetworkConnectionToClient conn, TestMessage message){

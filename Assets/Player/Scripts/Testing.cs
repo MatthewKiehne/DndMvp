@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Mirror;
-using UnityEditor;
 using UnityEngine;
 
 public class Testing : NetworkBehaviour
@@ -15,7 +13,7 @@ public class Testing : NetworkBehaviour
 
     void Start()
     {
-        if(isServer)
+        if (isServer)
         {
             NetworkClient.RegisterPrefab(EmptySpritePrefab);
             NetworkClient.RegisterPrefab(ChildPrefab);
@@ -27,7 +25,8 @@ public class Testing : NetworkBehaviour
         if (isLocalPlayer && Input.GetKeyDown(KeyCode.W))
         {
             // loadGameObject(MyNetManager.PlayerInitObject);
-            TestMessage message = new TestMessage(){
+            TestMessage message = new TestMessage()
+            {
                 value = "message string here",
                 time = System.DateTime.UtcNow.AddHours(-2),
                 id = Guid.NewGuid(),
@@ -77,7 +76,8 @@ public class Testing : NetworkBehaviour
     }
 
     [ClientRpc]
-    public void SetParent(GameObject parent, GameObject child) {
+    public void SetParent(GameObject parent, GameObject child)
+    {
         child.transform.SetParent(parent.transform);
     }
 
