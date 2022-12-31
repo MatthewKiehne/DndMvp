@@ -1,0 +1,13 @@
+using Mirror;
+
+#ROOTNAMESPACEBEGIN#
+namespace Connection.Response
+{
+    public struct #SCRIPTNAME# : NetworkMessage
+    {
+        // Default
+        public int Status;
+        public string Error;
+    }
+}
+#ROOTNAMESPACEEND#
