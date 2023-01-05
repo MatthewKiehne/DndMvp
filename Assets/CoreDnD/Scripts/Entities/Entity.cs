@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DndCore.Ability;
 using Entities.Features;
 
 namespace Entities
@@ -8,11 +9,13 @@ namespace Entities
     {
         public Guid Id {get; private set;}
         public List<Feature> Features { get; set; }
+        public List<Ability> Abilities {get; private set;}
 
         public Entity()
         {
-            Features = new List<Feature>();
             Id = Guid.NewGuid();
+            Features = new List<Feature>();
+            Abilities = new List<Ability>();
         }
     }
 }

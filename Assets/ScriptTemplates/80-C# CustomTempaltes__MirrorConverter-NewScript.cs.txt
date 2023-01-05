@@ -1,0 +1,19 @@
+using Mirror;
+
+#ROOTNAMESPACEBEGIN#
+namespace MirrorConverter
+{
+    public static class #SCRIPTNAME#
+    {
+        public static void Write#SCRIPTNAME#(this NetworkWriter writer, object replaceThisObject)
+        {
+            // replace object with the correct type
+        }
+
+        public static DateTime Read#SCRIPTNAME#(this NetworkReader reader)
+        {
+           
+        }
+    }
+}
+#ROOTNAMESPACEEND#

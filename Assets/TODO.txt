@@ -1,0 +1,6 @@
+TODO:
+    - Initiative
+        - Player hits button to initiative request to server
+        - server retrieves entity from dictionary
+        - calculates initiative from entity
+        - returns the result to user

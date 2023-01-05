@@ -1,5 +1,7 @@
 using System;
-using System.Collections.Generic;
+using Connection.Request;
+using Connection.Response;
+using DndCore.Ability;
 using Mirror;
 using UnityEngine;
 
@@ -9,101 +11,107 @@ public class Testing : NetworkBehaviour
     public GameObject EmptySpritePrefab;
     public GameObject ChildPrefab;
 
-    private TestingChild t = null;
+    private Guid testEntityId;
 
     void Start()
     {
-        if (isServer)
+        if (isClient)
         {
             NetworkClient.RegisterPrefab(EmptySpritePrefab);
             NetworkClient.RegisterPrefab(ChildPrefab);
+            Debug.Log("Called register");
+
+            NetworkClient.RegisterHandler<CharacterCreationResponse>(OnCharacterCreationResponse);
+            NetworkClient.RegisterHandler<GetAbilitiesFromEntityResponse>(OnGetAbilitiesFromEntityResponse);
+
+            // RandomCharacterCreateMessage r = new RandomCharacterCreateMessage();
+            // Debug.Log(NetworkClient.connection);
+            // NetworkClient.Send(r);
         }
     }
 
     void Update()
     {
-        if (isLocalPlayer && Input.GetKeyDown(KeyCode.W))
+        if (isLocalPlayer && Input.GetKeyDown(KeyCode.Q))
         {
-            // loadGameObject(MyNetManager.PlayerInitObject);
-            TestMessage message = new TestMessage()
+            RandomCharacterCreateMessage r = new RandomCharacterCreateMessage();
+            NetworkClient.Send(r);
+        }
+
+        if(isLocalPlayer && testEntityId != null && Input.GetKeyDown(KeyCode.A))
+        {
+            GetAbilitiesFromEntity message = new GetAbilitiesFromEntity()
             {
-                value = "message string here",
-                time = System.DateTime.UtcNow.AddHours(-2),
-                id = Guid.NewGuid(),
-                strings = new List<string>{
-                    "here",
-                    "is",
-                    "a",
-                    "list"
-                },
-                pairs = new Dictionary<string, string>(){
-                    {"aKey", "aValue"}
-                }
+                EntityId = testEntityId
             };
             NetworkClient.Send(message);
         }
     }
 
-    [Command]
-    public void loadGameObject(string spriteName)
+    public void OnCharacterCreationResponse(CharacterCreationResponse response)
     {
+        testEntityId = response.CharacterId;
+        Debug.Log(testEntityId);
+    }
 
-        if (MyNetManager.SpriteLookup.ContainsKey(spriteName))
+    public void OnGetAbilitiesFromEntityResponse(GetAbilitiesFromEntityResponse response)
+    {
+        if(response.status != 200)
         {
+            Debug.Log("something went wrong");
+            return;
+        }
 
-            GameObject emptySprite = Instantiate(EmptySpritePrefab, new Vector2(0, 0), Quaternion.identity);
-            NetworkServer.Spawn(emptySprite, connectionToClient);
-
-            GameObject childGO = Instantiate(ChildPrefab, Vector3.zero, Quaternion.identity);
-            NetworkServer.Spawn(childGO, connectionToClient);
-
-            childGO.transform.SetParent(emptySprite.transform);
-            SetParent(emptySprite, childGO);
-
-            SetStuff(childGO);
-
-            Sprite foundSprite = MyNetManager.SpriteLookup[spriteName];
-            byte[] bytes = foundSprite.texture.EncodeToPNG();
-            RegisterPrefab(bytes, emptySprite);
-            Debug.Log("now spawning");
+        foreach(AbilityBrief ability in response.AbilityBriefs)
+        {
+            Debug.Log("Ability: " + ability.Name);
         }
     }
 
-    [ClientRpc]
-    public void SetStuff(GameObject childGO)
-    {
-        t = childGO.GetComponent<TestingChild>();
-    }
+    // [Command]
+    // public void loadGameObject(string spriteName)
+    // {
 
-    [ClientRpc]
-    public void SetParent(GameObject parent, GameObject child)
-    {
-        child.transform.SetParent(parent.transform);
-    }
+    //     if (MyNetManager.SpriteLookup.ContainsKey(spriteName))
+    //     {
+    //         GameObject emptySprite = Instantiate(EmptySpritePrefab, new Vector2(0, 0), Quaternion.identity);
+    //         NetworkServer.Spawn(emptySprite, connectionToClient);
 
-    [ClientRpc]
-    public void RegisterPrefab(byte[] imageBytes, GameObject spriteObject)
-    {
+    //         GameObject childGO = Instantiate(ChildPrefab, Vector3.zero, Quaternion.identity);
+    //         NetworkServer.Spawn(childGO, connectionToClient);
 
-        Texture2D loadTexture = new Texture2D(256, 256);
-        loadTexture.LoadImage(imageBytes);
-        Sprite sprite = Sprite.Create(loadTexture, new Rect(0, 0, loadTexture.width, loadTexture.height), Vector2.zero, 10f);
+    //         childGO.transform.SetParent(emptySprite.transform);
 
-        SpriteRenderer sr = spriteObject.GetComponent<SpriteRenderer>();
-        sr.sprite = sprite;
-    }
+    //         Sprite foundSprite = MyNetManager.SpriteLookup[spriteName];
+    //         byte[] bytes = foundSprite.texture.EncodeToPNG();
+    //         RegisterPrefab(bytes, emptySprite);
+    //         Debug.Log("now spawning");
+    //     }
+    // }
 
-    [ClientRpc]
-    public void spawnVisibility(GameObject thingSpawned)
-    {
+    // [ClientRpc]
+    // public void RegisterPrefab(byte[] imageBytes, GameObject spriteObject)
+    // {
 
-        if (isOwned)
-        {
-            thingSpawned.SetActive(true);
-        }
-        else
-        {
-            thingSpawned.SetActive(false);
-        }
-    }
+    //     Texture2D loadTexture = new Texture2D(256, 256);
+    //     loadTexture.LoadImage(imageBytes);
+    //     Sprite sprite = Sprite.Create(loadTexture, new Rect(0, 0, loadTexture.width, loadTexture.height), Vector2.zero, 10f);
+
+    //     SpriteRenderer sr = spriteObject.GetComponent<SpriteRenderer>();
+    //     sr.sprite = sprite;
+    // }
+
+    // [ClientRpc]
+    // public void spawnVisibility(GameObject thingSpawned)
+    // {
+
+    //     if (isOwned)
+    //     {
+    //         thingSpawned.SetActive(true);
+    //     }
+    //     else
+    //     {
+    //         thingSpawned.SetActive(false);
+    //     }
+    // }
 }

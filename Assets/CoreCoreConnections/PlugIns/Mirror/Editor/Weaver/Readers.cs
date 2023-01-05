@@ -241,7 +241,6 @@ namespace Mirror.Weaver
             MethodDefinition readerFunc = GenerateReaderFunction(variable);
             // generate readers for the element
             bool failed = false;
-            List<MethodReference> elementReadFuncs = new List<MethodReference>();
             foreach( var element in elementTypes)
             {
                 MethodReference elementReadFunc = GetReadFunc(element, ref WeavingFailed);
@@ -250,7 +249,6 @@ namespace Mirror.Weaver
                     failed = true;
                     break;
                 }
-                elementReadFuncs.Add(elementReadFunc);
             }
 
             if (failed)
