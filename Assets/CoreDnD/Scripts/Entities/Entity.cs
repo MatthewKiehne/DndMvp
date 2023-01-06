@@ -11,9 +11,11 @@ namespace Entities
         public List<Feature> Features { get; set; }
         public List<Ability> Abilities {get; private set;}
 
-        public Entity()
+        public Entity() : this(Guid.NewGuid()) {}
+
+        public Entity (Guid id)
         {
-            Id = Guid.NewGuid();
+            Id = id;
             Features = new List<Feature>();
             Abilities = new List<Ability>();
         }

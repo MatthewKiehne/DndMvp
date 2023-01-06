@@ -11,7 +11,9 @@ public class Testing : NetworkBehaviour
     public GameObject EmptySpritePrefab;
     public GameObject ChildPrefab;
 
-    private Guid testEntityId;
+    private Guid TestEntityId;
+    private Guid IdOfEntityToTarget;
+    private Guid TestAbilityId;
 
     void Start()
     {
@@ -23,6 +25,7 @@ public class Testing : NetworkBehaviour
 
             NetworkClient.RegisterHandler<CharacterCreationResponse>(OnCharacterCreationResponse);
             NetworkClient.RegisterHandler<GetAbilitiesFromEntityResponse>(OnGetAbilitiesFromEntityResponse);
+            NetworkClient.RegisterHandler<GetAllEntitiesResponse>(OnGetAllEntitiesResponse);
 
             // RandomCharacterCreateMessage r = new RandomCharacterCreateMessage();
             // Debug.Log(NetworkClient.connection);
@@ -38,20 +41,25 @@ public class Testing : NetworkBehaviour
             NetworkClient.Send(r);
         }
 
-        if(isLocalPlayer && testEntityId != null && Input.GetKeyDown(KeyCode.A))
+        if(isLocalPlayer && TestEntityId != null && Input.GetKeyDown(KeyCode.A))
         {
             GetAbilitiesFromEntity message = new GetAbilitiesFromEntity()
             {
-                EntityId = testEntityId
+                EntityId = TestEntityId
             };
+            NetworkClient.Send(message);
+        }
+        if(isLocalPlayer && TestEntityId != null && Input.GetKeyDown(KeyCode.Z))
+        {
+            GetAllEntities message = new GetAllEntities();
             NetworkClient.Send(message);
         }
     }
 
     public void OnCharacterCreationResponse(CharacterCreationResponse response)
     {
-        testEntityId = response.CharacterId;
-        Debug.Log(testEntityId);
+        TestEntityId = response.CharacterId;
+        Debug.Log(TestEntityId);
     }
 
     public void OnGetAbilitiesFromEntityResponse(GetAbilitiesFromEntityResponse response)
@@ -65,6 +73,20 @@ public class Testing : NetworkBehaviour
         foreach(AbilityBrief ability in response.AbilityBriefs)
         {
             Debug.Log("Ability: " + ability.Name);
+        }
+
+        TestAbilityId = response.AbilityBriefs[0].Id;
+    }
+
+    public void OnGetAllEntitiesResponse(GetAllEntitiesResponse response)
+    {
+        foreach(var i in response.Entities)
+        {
+            Debug.Log("Entity: " + i.Id);
+            if(!i.Id.Equals(TestEntityId))
+            {
+                IdOfEntityToTarget = i.Id;
+            }
         }
     }
 

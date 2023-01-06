@@ -31,6 +31,7 @@ public class MyNetManager : NetworkManager
         // NetworkServer.RegisterHandler<TestMessage>(ConsumeMessage);
         NetworkServer.RegisterHandler<RandomCharacterCreateMessage>(connectionId);
         NetworkServer.RegisterHandler<GetAbilitiesFromEntity>(OnGetAbilitiesFromEntity);
+        NetworkServer.RegisterHandler<GetAllEntities>(OnGetAllEntities);
 
 
 
@@ -128,6 +129,13 @@ public class MyNetManager : NetworkManager
         response.AbilityBriefs = entity.Abilities.Select(a => new AbilityBrief(a)).ToList();
         
         response.status = 200;
+        conn.Send(response);
+    }
+
+    public void OnGetAllEntities(NetworkConnectionToClient conn, GetAllEntities message)
+    {
+        GetAllEntitiesResponse response = new GetAllEntitiesResponse();
+        response.Entities = Entities.Select(x => new EntityBrief(x.Value)).ToList();
         conn.Send(response);
     }
 }

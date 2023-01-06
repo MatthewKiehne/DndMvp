@@ -6,9 +6,9 @@ namespace Entities.Features
 {
     public class Feature
     {
-        public Guid Id {get; private set;}
-        public string Name { get; private set; }
-        public List<Condition> Conditions {get; private set;}
+        public Guid Id;
+        public string Name;
+        public List<Condition> Conditions;
 
         public Feature(string name)
         {
