@@ -13,6 +13,11 @@ namespace DndCore.Ability
         public AbilityActionType ActionType;
         public List<AbilityInputInstruction> Instructions;
 
+        public AbilityBrief()
+        {
+            Instructions = new List<AbilityInputInstruction>();
+        }
+
         public AbilityBrief(Ability ability)
         {
             Id = ability.Id;

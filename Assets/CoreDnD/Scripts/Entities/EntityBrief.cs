@@ -11,7 +11,13 @@ namespace Entities
         public Guid Id;
         public List<Feature> Features;
         public List<AbilityBrief> Abilities;
-        
+
+        public EntityBrief()
+        {
+            Features = new List<Feature>();
+            Abilities = new List<AbilityBrief>();
+        }
+
         public EntityBrief(Entity entity)
         {
             Id = entity.Id;

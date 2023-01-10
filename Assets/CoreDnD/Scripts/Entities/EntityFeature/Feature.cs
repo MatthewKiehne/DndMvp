@@ -10,6 +10,11 @@ namespace Entities.Features
         public string Name;
         public List<Condition> Conditions;
 
+        public Feature()
+        {
+            
+        }
+
         public Feature(string name)
         {
             Name = name;

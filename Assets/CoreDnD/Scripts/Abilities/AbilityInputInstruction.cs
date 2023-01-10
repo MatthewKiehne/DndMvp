@@ -11,6 +11,11 @@ namespace DndCore.Ability
         public bool Optional { get; private set; }
         public List<AbilityInputInstruction> Instructions { get; private set; }
 
+        public AbilityInputInstruction()
+        {
+            Instructions = new List<AbilityInputInstruction>();   
+        }
+
         public AbilityInputInstruction(AbilityTargetType type, int range, bool optional = false)
         {
             AbilityTargetType = type;

@@ -10,6 +10,11 @@ namespace DndCore.Ability
         public AbilityTargetType TargetType;
         public Vector2Int TargetPosition;
 
+        public AbilityTarget()
+        {
+            EntityIds = new List<Guid>();
+        }
+
         public AbilityTarget(AbilityTargetType targetType, Vector2Int targetPosition)
         {
             EntityIds = new List<Guid>();

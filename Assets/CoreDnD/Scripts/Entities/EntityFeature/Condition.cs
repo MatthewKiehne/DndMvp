@@ -5,6 +5,11 @@ namespace Entities.Features
         public string Name { get; private set; }
         public int Value { get; private set; }
 
+        public Condition()
+        {
+            
+        }
+
         public Condition(string name, int value)
         {
             Name = name;
