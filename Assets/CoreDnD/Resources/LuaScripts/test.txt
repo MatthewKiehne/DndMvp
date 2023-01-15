@@ -1,0 +1,35 @@
+-- defines a factorial function
+-- function fact(n)
+--     if (n == 0) then
+--         return 1
+--     else
+--         return n * fact(n - 1)
+--     end
+-- end
+
+-- function CountIds(abilityTargets)
+--     local total = 69;
+--     Debug.LogTable(abilityTargets);
+--     Debug.LogDouble(#abilityTargets[1].entityIds);
+
+--     return total
+-- end
+
+function GetAbilityInstructions()
+    return {
+        {
+            optional = false,
+            range = 5,
+            abilityTargetType = "Other",
+            instructions = nil
+        }
+    }
+end
+
+function ValidateAbilityTargets()
+    return true;
+end
+
+function UseAbility()
+    
+end

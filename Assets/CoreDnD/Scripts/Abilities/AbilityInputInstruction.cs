@@ -6,10 +6,10 @@ namespace DndCore.Ability
 {
     public class AbilityInputInstruction
     {
-        public AbilityTargetType AbilityTargetType { get; private set; }
-        public int Range { get; private set; }
-        public bool Optional { get; private set; }
-        public List<AbilityInputInstruction> Instructions { get; private set; }
+        public AbilityTargetType AbilityTargetType { get; set; }
+        public int Range { get; set; }
+        public bool Optional { get; set; }
+        public List<AbilityInputInstruction> Instructions { get; set; }
 
         public AbilityInputInstruction()
         {

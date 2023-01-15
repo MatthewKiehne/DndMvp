@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Connection.Request;
 using Connection.Response;
 using DndCore.Ability;
 using Mirror;
+using MoonSharp.Interpreter;
 using UnityEngine;
 
 public class Testing : NetworkBehaviour
@@ -21,15 +23,16 @@ public class Testing : NetworkBehaviour
         {
             NetworkClient.RegisterPrefab(EmptySpritePrefab);
             NetworkClient.RegisterPrefab(ChildPrefab);
-            Debug.Log("Called register");
 
             NetworkClient.RegisterHandler<CharacterCreationResponse>(OnCharacterCreationResponse);
             NetworkClient.RegisterHandler<GetAbilitiesFromEntityResponse>(OnGetAbilitiesFromEntityResponse);
             NetworkClient.RegisterHandler<GetAllEntitiesResponse>(OnGetAllEntitiesResponse);
+            NetworkClient.RegisterHandler<GetAbilityInputInstructionResponse>(OnGetAbilityInputInstructionResponse);
 
             // RandomCharacterCreateMessage r = new RandomCharacterCreateMessage();
             // Debug.Log(NetworkClient.connection);
             // NetworkClient.Send(r);
+
         }
     }
 
@@ -52,6 +55,16 @@ public class Testing : NetworkBehaviour
         if(isLocalPlayer && TestEntityId != null && Input.GetKeyDown(KeyCode.Z))
         {
             GetAllEntities message = new GetAllEntities();
+            NetworkClient.Send(message);
+        }
+        if(isLocalPlayer && TestEntityId != null && Input.GetKeyDown(KeyCode.I))
+        {
+            GuidsMessage message = new GuidsMessage();
+            message.MessageName = GuidsMessage.GetAbilityInputInstructions;
+            message.Guids = new Dictionary<string, Guid>();
+            message.Guids.Add("entityId", TestEntityId);
+            message.Guids.Add("abilityId", TestAbilityId);
+
             NetworkClient.Send(message);
         }
     }
@@ -88,6 +101,11 @@ public class Testing : NetworkBehaviour
                 IdOfEntityToTarget = i.Id;
             }
         }
+    }
+
+    public void OnGetAbilityInputInstructionResponse(GetAbilityInputInstructionResponse response)
+    {
+        Debug.Log("Got Response");
     }
 
     // [Command]

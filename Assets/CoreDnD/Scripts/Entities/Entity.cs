@@ -10,6 +10,7 @@ namespace Entities
         public Guid Id {get; private set;}
         public List<Feature> Features { get; set; }
         public List<Ability> Abilities {get; private set;}
+        public Dictionary<string,int> DiscreteValues {get; private set;}
 
         public Entity() : this(Guid.NewGuid()) {}
 
@@ -18,6 +19,7 @@ namespace Entities
             Id = id;
             Features = new List<Feature>();
             Abilities = new List<Ability>();
+            DiscreteValues = new Dictionary<string, int>();
         }
     }
 }

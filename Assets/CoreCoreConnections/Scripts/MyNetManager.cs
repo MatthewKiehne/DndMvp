@@ -8,6 +8,8 @@ using DndCore.Ability;
 using System;
 using System.Linq;
 using Connection.Request;
+using Lua.Translation;
+using MoonSharp.Interpreter;
 
 public class MyNetManager : NetworkManager
 {
@@ -24,14 +26,31 @@ public class MyNetManager : NetworkManager
 
     public override void OnStartServer()
     {
-        Debug.Log("on server start");
         SpriteLookup.Add(PlayerInitObject, sprite);
         base.OnStartServer();
 
         // NetworkServer.RegisterHandler<TestMessage>(ConsumeMessage);
-        NetworkServer.RegisterHandler<RandomCharacterCreateMessage>(connectionId);
+        NetworkServer.RegisterHandler<RandomCharacterCreateMessage>(OnCreateCharacter);
         NetworkServer.RegisterHandler<GetAbilitiesFromEntity>(OnGetAbilitiesFromEntity);
         NetworkServer.RegisterHandler<GetAllEntities>(OnGetAllEntities);
+        NetworkServer.RegisterHandler<GuidsMessage>(OnGuidsMessage);
+
+        List<LuaTranslate> translations = new List<LuaTranslate>(){
+            new Vector2IntTranslate(),
+            new GuidTranslate(),
+            new AbilityTargetTranslate(),
+            new AbilityInputInstructionTranslate()
+        };
+
+        foreach (LuaTranslate translate in translations)
+        {
+            translate.RegisterToLua();
+            translate.RegisterFromLua();
+        }
+
+
+
+        // res.ToObject<List<AbilityInputInstruction>>();
 
 
 
@@ -66,13 +85,35 @@ public class MyNetManager : NetworkManager
     //     }
     // }
 
+    public Guid LogGuid(Guid value)
+    {
+        Debug.Log(value);
+        return value;
+    }
+
+    public string LogString(string value)
+    {
+        Debug.Log(value);
+        return value;
+    }
+    public double LogDouble(double value)
+    {
+        Debug.Log(value);
+        return value;
+    }
+
+    public Table logTable(Table table)
+    {
+        Debug.Log(table);
+        return table;
+    }
+
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
         // add player at correct spawn position
         // Transform start = numPlayers == 0 ? leftRacketSpawn : rightRacketSpawn;
         GameObject player = Instantiate(playerPrefab);
         NetworkServer.AddPlayerForConnection(conn, player);
-        Debug.Log("added player control");
 
         // spawn ball if two players
         // if (numPlayers == 2)
@@ -92,7 +133,36 @@ public class MyNetManager : NetworkManager
         base.OnServerDisconnect(conn);
     }
 
-    public void connectionId(NetworkConnectionToClient conn, RandomCharacterCreateMessage message)
+    public void OnGuidsMessage(NetworkConnectionToClient conn, GuidsMessage message)
+    {
+        switch (message.MessageName)
+        {
+            case GuidsMessage.GetAbilityInputInstructions:
+                GetAbilityInputInstructions(conn, message);
+                break;
+            default:
+                throw new Exception(message.MessageName + " not supported");
+        }
+
+    }
+
+    public void GetAbilityInputInstructions(NetworkConnectionToClient conn, GuidsMessage message)
+    {
+        Guid entityId = message.Guids["entityId"];
+        Guid abilityId = message.Guids["abilityId"];
+
+        Entity e = Entities[entityId];
+
+        Ability ability = e.Abilities.Find(a => a.Id.Equals(abilityId));
+        List<AbilityInputInstruction> instructions = ability.GetAbilityInputInstructions();
+
+        GetAbilityInputInstructionResponse response = new GetAbilityInputInstructionResponse();
+        response.Instructions = instructions;
+
+        conn.Send(response);
+    }
+
+    public void OnCreateCharacter(NetworkConnectionToClient conn, RandomCharacterCreateMessage message)
     {
         Debug.Log("started entity creation");
 
@@ -103,7 +173,26 @@ public class MyNetManager : NetworkManager
         testEntity.Features.Add(feature);
 
         Ability ability = new Ability("Unarmed Attack", "A strick without a weapon", AbilityActionType.Action);
-        ability.Instructions.Add(new AbilityInputInstruction(AbilityTargetType.Other, 5));
+
+        // load the ability text
+        TextAsset textAsset = Resources.Load<TextAsset>("LuaScripts/test");
+        Script script = new Script();
+        script.DoString(textAsset.text);
+
+        // set up debug logic
+        Table debugTable = new Table(script);
+        debugTable["LogGuid"] = (Func<Guid, Guid>)LogGuid;
+        debugTable["LogString"] = (Func<string, string>)LogString;
+        debugTable["LogDouble"] = (Func<double, double>)LogDouble;
+        debugTable["LogTable"] = (Func<Table, Table>)logTable;
+        script.Globals["Debug"] = debugTable;
+
+        // sets the ability's lua scripts
+        Closure abilityInstructions = script.Globals.Get("GetAbilityInstructions").Function;
+        Closure validateTargets = script.Globals.Get("ValidateAbilityTargets").Function;
+        Closure useAbility = script.Globals.Get("UseAbility").Function;
+        ability.SetAbilityInfo(abilityInstructions, validateTargets, useAbility);
+
         testEntity.Abilities.Add(ability);
 
         CharacterCreationResponse response = new CharacterCreationResponse();
@@ -127,7 +216,7 @@ public class MyNetManager : NetworkManager
 
         Entity entity = Entities[message.EntityId];
         response.AbilityBriefs = entity.Abilities.Select(a => new AbilityBrief(a)).ToList();
-        
+
         response.status = 200;
         conn.Send(response);
     }
